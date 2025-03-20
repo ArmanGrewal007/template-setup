@@ -11,6 +11,11 @@ if (!projectName) {
   process.exit(1);
 }
 
+// If the user runs `npx create-armangrewal007-app .`
+if (projectName === '.') {
+  projectName = path.basename(process.cwd());
+}
+
 async function main() {
   try {
     // Clone the template using degit
@@ -22,48 +27,42 @@ async function main() {
     execSync('git init', { cwd: projectName });
 
     // Update vite.config.js
-    console.log('⚙️ Configuring Vite...');
-    const viteConfig = `import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { ghPages } from "vite-plugin-gh-pages";
-import path from "path";
+    console.log('⚙️ Configuring Vite ...');
+    const viteConfigPath = path.join(targetDir, 'vite.config.js');
+    let viteConfigContent = fs.readFileSync(viteConfigPath, 'utf8');
+    viteConfigContent = viteConfigContent.replace(
+      /base:\s*mode === "production" \? "(.*?)" : "\/",/,
+      `base: mode === "production" ? "/${projectName}/" : "/",`
+    );
+    fs.writeFileSync(viteConfigPath, viteConfigContent);
 
-// https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  return {
-    plugins: [react(), ghPages()],
-    base: mode === "production" ? "/${projectName}/" : "/",
-    resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "./src"),
-      },
-    },
-  };
-});
-`;
-
-    fs.writeFileSync(path.join(projectName, 'vite.config.js'), viteConfig);
-
-    // Read and update package.json
+    // Update package.json
+    console.log('⚙️ Updating package name in package.json ...');
     const packageJsonPath = path.join(projectName, 'package.json');
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-
-    // Update package name
     packageJson.name = projectName;
-
-    // Write back the updated package.json
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    console.log('\n✅ Setup complete! Your project is ready.');
-    console.log(`\nNext steps:
-    cd ${projectName}
+    // Update index.html title
+    console.log('⚙️ Updating package name in index.html ...');
+    const indexPath = path.join(projectName, 'index.html');
+    let indexHtml = fs.readFileSync(indexPath, 'utf8');
+    indexHtml = indexHtml.replace(/<title>(.*?)<\/title>/, `<title>${projectName}</title>`);
+    fs.writeFileSync(indexPath, indexHtml);
+
+    console.log('\n✅ Setup complete! Your project is ready.\n Next steps:');
+    if (projectName !== path.basename(process.cwd())) {
+      console.log(`
+      cd ${projectName}`);
+    }
+    console.log(`
     npm install
     npm run dev
     
 To deploy to GitHub Pages:
     1. Create a new repository on GitHub
     2. Push your code
-    3. Run: npm run deploy`);
+    3. Run: npm run deploy to publish to github pages`);
 
   } catch (error) {
     console.error('❌ Error:', error.message);
