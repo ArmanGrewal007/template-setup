@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-const projectName = process.argv[2];
+let projectName = process.argv[2];
 
 if (!projectName) {
   console.error('Please specify a project name!');
