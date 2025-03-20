@@ -2,5 +2,5 @@
 
 Installation:
 ```bash
-npx create-armangrewal007-template <my-project-name>
+npx create-armangrewal007-app <my-project-name>
 ```
